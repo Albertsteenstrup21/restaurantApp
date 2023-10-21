@@ -26,7 +26,7 @@ if (!firebase.apps.length) {
 }
 
 const db = getDatabase();
-const fbApp = getApp();
-const fbStorage = getStorage(fbApp);
+const app = getApp();
+const storage = getStorage(app);
 
-export {db, fbApp, fbStorage };
+export {db, app, storage };

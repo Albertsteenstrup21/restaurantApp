@@ -18,6 +18,10 @@ import StackNavigator from "./components/StackNavigator";
 import SignUpForm from "./components/auth/SignUpForm";
 import LoginForm from "./components/auth/LoginForm";
 
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
+LogBox.ignoreAllLogs();//Ignore all log notifications
+
 const AuthStack = createNativeStackNavigator(); // Stack for authentication flow
 const Tab = createBottomTabNavigator(); // Main app navigation
 
@@ -75,7 +79,7 @@ export default function App() {
 
               return <Ionicons name={iconName} size={size} color={color} />;
             },
-            tabBarActiveTintColor: "tomato",
+            tabBarActiveTintColor: "black",
             tabBarInactiveTintColor: "gray",
           })}
         >

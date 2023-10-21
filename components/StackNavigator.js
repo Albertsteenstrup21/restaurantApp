@@ -14,7 +14,9 @@ const Stack = createStackNavigator();
 //Laver stack navigation
 export default function StackNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Profile">
+    <Stack.Navigator
+      initialRouteName="Profile"
+    >
       <Stack.Screen
         name="Back"
         component={ProfileScreen}
