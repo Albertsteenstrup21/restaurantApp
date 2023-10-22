@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Modal,
 } from "react-native";
 import { getDatabase, ref, set, get } from "firebase/database";
 import {
@@ -43,8 +42,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
     const auth = getAuth();
     let userId = "";
     if (auth.currentUser) {
-      //userId = auth.currentUser.uid;
-      userId = "test";
+      userId = auth.currentUser.uid;
+      // userId = "test";
     }
     // Check if required fields are filled out
     if (
@@ -77,12 +76,22 @@ const RestaurantSignUpForm = ({ navigation }) => {
           media.map(async (item) => {
             const response = await fetch(item.uri);
             const blob = await response.blob();
-            console.log(userId);
+            console.log(item);
             const mediaRef = storageRef(
               storage,
               "media/" + userId + "/" + item.fileName
             );
-            await uploadBytes(mediaRef, blob);
+            let metadata = "";
+            if (item.type === "video") {
+                metadata = {
+                    contentType: "video/mp4",
+                };
+            } else { 
+                metadata = {
+                    contentType: "image/jpeg",
+                };
+            }
+            await uploadBytes(mediaRef, blob, metadata);
             const downloadUrl = await getDownloadURL(mediaRef);
             return downloadUrl;
           })
