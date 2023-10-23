@@ -46,7 +46,6 @@ const FetchDatabase = () => {
   //Returnerer data fra firebase i en liste i react native
   return (
     <View>
-      <Text style={styles.header}> Fetched data from Firebase</Text>
       <Carousel
         data={restaurantData}
         renderItem={({ item }) => (
@@ -67,7 +66,6 @@ const FetchDatabase = () => {
             <Animated.View
               style={[styles.overlay, { opacity: overlayOpacity }]}
             >
-              <Text style={styles.text}>{item.id}</Text>
               <Text style={styles.text}>{item.name}</Text>
               <Text style={styles.text}>{item.address}</Text>
               <Text style={styles.text}>{item.cuisine}</Text>
@@ -77,8 +75,8 @@ const FetchDatabase = () => {
             </Animated.View>
           </View>
         )}
-        sliderHeight={Dimensions.get("window").width}
-        itemHeight={Dimensions.get("window").width}
+        sliderHeight={Dimensions.get("window").width* 16 / 9}
+        itemHeight={Dimensions.get("window").width * 16 / 9}
         sliderWidth={Dimensions.get("window").width}
         itemWidth={Dimensions.get("window").width}
         vertical={true}

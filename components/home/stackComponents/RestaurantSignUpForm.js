@@ -36,14 +36,15 @@ const RestaurantSignUpForm = ({ navigation }) => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [isUploadSuccessful, setIsUploadSuccessful] = useState(false);
   const [isVideoMaximized, setIsVideoMaximized] = useState(false);
+  const [isPhotoMaximized, setIsPhotoMaximized] = useState(false);
 
   const handleSignUp = async () => {
     // Get the user ID of the currently logged in user
     const auth = getAuth();
     let userId = "";
     if (auth.currentUser) {
-      userId = auth.currentUser.uid;
-      // userId = "test";
+      // userId = auth.currentUser.uid;
+      userId = "test133";
     }
     // Check if required fields are filled out
     if (
@@ -83,13 +84,13 @@ const RestaurantSignUpForm = ({ navigation }) => {
             );
             let metadata = "";
             if (item.type === "video") {
-                metadata = {
-                    contentType: "video/mp4",
-                };
-            } else { 
-                metadata = {
-                    contentType: "image/jpeg",
-                };
+              metadata = {
+                contentType: "video/mp4",
+              };
+            } else {
+              metadata = {
+                contentType: "image/jpeg",
+              };
             }
             await uploadBytes(mediaRef, blob, metadata);
             const downloadUrl = await getDownloadURL(mediaRef);
@@ -113,7 +114,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
       const errorCode = error.code;
       const errorMessage = error.message;
       setErrorMessage(errorMessage);
-      console.log(errorMessage);
+      console.log("error: " + errorMessage);
     }
   };
 
@@ -133,9 +134,12 @@ const RestaurantSignUpForm = ({ navigation }) => {
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setMedia([...media, result]);
-      setMediaArr((mediaArr) => [result].concat(mediaArr));
+      setMedia([...media, ...result.assets]);
+      setMediaArr((mediaArr) => [...result.assets ,...mediaArr]);
       setIsVideoUploaded(true);
+      useEffect(() => {
+        console.log(mediaArr);
+      }, [mediaArr]);
     }
   };
 
@@ -155,7 +159,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
 
     if (!result.canceled && result.assets.length > 0) {
       setMedia([...media, ...result.assets]);
-      setMediaArr((mediaArr) => [...result.assets, ...mediaArr].reverse());
+      setMediaArr((mediaArr) => [...mediaArr, ...result.assets]);
     }
   };
 
@@ -177,21 +181,28 @@ const RestaurantSignUpForm = ({ navigation }) => {
 
   const handleMediaPress = (media) => {
     setSelectedMedia(media);
-    setIsVideoMaximized(media.type === "video");
+    if (media.type === "video") {
+      setIsVideoMaximized(true);
+      setIsPhotoMaximized(false);
+    } else {
+      setIsPhotoMaximized(true);
+      setIsVideoMaximized(false);
+    }
   };
 
   const handleMinimize = () => {
     setSelectedMedia(null);
     setIsVideoMaximized(false);
+    setIsPhotoMaximized(false);
   };
 
   useEffect(() => {
-    if (selectedMedia && isVideoMaximized) {
+    if (selectedMedia && (isVideoMaximized || isPhotoMaximized)) {
       navigation.setOptions({ headerShown: false });
     } else {
       navigation.setOptions({ headerShown: true });
     }
-  }, [isVideoMaximized, selectedMedia]);
+  }, [isVideoMaximized, isPhotoMaximized, selectedMedia]);
 
   if (isUploadSuccessful) {
     return (
@@ -224,11 +235,21 @@ const RestaurantSignUpForm = ({ navigation }) => {
             )}
           </View>
         ) : (
-          <Image
-            source={{ uri: selectedMedia.uri }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="contain"
-          />
+          <View style={{ flex: 1 }}>
+            <Image
+              source={{ uri: selectedMedia.uri }}
+              style={{ width: "100%", height: isPhotoMaximized ? "100%" : 300 }}
+              resizeMode="contain"
+            />
+            {isPhotoMaximized && (
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleMinimize}
+              >
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </View>
     );
