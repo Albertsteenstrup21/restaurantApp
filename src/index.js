@@ -11,7 +11,7 @@ const FetchDatabase = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayOpacity, setOverlayOpacity] = useState(new Animated.Value(0));
 
-  //Henter data fra firebase
+  // Fetch data from Firebase
   useEffect(() => {
     const db = getDatabase();
     const starCountRef = ref(db, "restaurants");
@@ -26,9 +26,9 @@ const FetchDatabase = () => {
     });
   }, []);
 
-  //Animasjon for overlay
+  // Animate overlay when showOverlay changes
   useEffect(() => {
-    if (showOverlay == "true") {
+    if (showOverlay) {
       Animated.timing(overlayOpacity, {
         toValue: 1,
         duration: 3000,
@@ -43,7 +43,7 @@ const FetchDatabase = () => {
     }
   }, [showOverlay]);
 
-  //Returnerer data fra firebase i en liste i react native
+  // Render data from Firebase in a carousel with video and overlay
   return (
     <View>
       <Carousel
@@ -58,8 +58,9 @@ const FetchDatabase = () => {
               isLooping
               useNativeControls
               onPlaybackStatusUpdate={(status) => {
+                // Show overlay when video has played for 7 seconds
                 if (status.isPlaying && status.positionMillis > 7000) {
-                  setShowOverlay("true");
+                  setShowOverlay(true);
                 }
               }}
             />
@@ -75,15 +76,15 @@ const FetchDatabase = () => {
             </Animated.View>
           </View>
         )}
-        sliderHeight={Dimensions.get("window").width* 16 / 9}
-        itemHeight={Dimensions.get("window").width * 16 / 9}
+        sliderHeight={(Dimensions.get("window").width * 16) / 9}
+        itemHeight={(Dimensions.get("window").width * 16) / 9}
         sliderWidth={Dimensions.get("window").width}
         itemWidth={Dimensions.get("window").width}
         vertical={true}
         enableSnap={true}
         activeSlideAlignment=""
         onSnapToItem={() => {
-          setShowOverlay("false");
+          setShowOverlay(false);
         }}
       />
     </View>

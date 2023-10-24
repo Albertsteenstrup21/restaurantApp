@@ -1,4 +1,4 @@
-//components/auth/LoginForm.js
+// Import necessary modules and functions
 import React, { useState, useRef } from "react";
 import {
   Button,
@@ -12,38 +12,43 @@ import {
 } from "react-native";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
+// Import image asset
 import tasteShareIcon from "../../assets/tasteShareIcon.png";
 
+// Define LoginForm component
 function LoginForm({ navigation }) {
+  // Initialize Firebase auth
   const auth = getAuth();
 
-  //Instantiering af statevariabler, der skal benyttes i LoginForm
+  // Initialize state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isCompleted, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  //Instantiering af en Animated.Value, som skal benyttes til at animere logoet
+  // Initialize Animated.Value for logo animation
   const spinValue = useRef(new Animated.Value(0)).current;
 
+  // Handle form submission
   const handleSubmit = async () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Signed in
+        // If sign-in is successful, log the user object to the console
         const user = userCredential.user;
         console.log(user);
-        //direct to profile screen
+        // Direct user to profile screen
       })
       .catch((error) => {
+        // If sign-in fails, set the error message state
         const errorCode = error.code;
         const errorMessage = error.message;
         setErrorMessage(errorMessage);
       });
   };
 
-  //Funktionen startAnimation, som starter animationen af logoet
+  // Start logo animation
   const startAnimation = () => {
-    //Reset spinValue to 0 before starting the animation
+    // Reset spinValue to 0 before starting the animation
     spinValue.setValue(0);
 
     Animated.timing(spinValue, {
@@ -53,12 +58,13 @@ function LoginForm({ navigation }) {
     }).start();
   };
 
-  //Her defineres stylingen for logoet, som inkluderer en rotation
+  // Define logo styling with rotation animation
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
 
+  // Render login button
   const renderButton = () => {
     return (
       <Button
@@ -71,6 +77,7 @@ function LoginForm({ navigation }) {
     );
   };
 
+  // Render LoginForm component
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => startAnimation()}>
@@ -97,14 +104,14 @@ function LoginForm({ navigation }) {
       {renderButton()}
       <TouchableOpacity onPress={() => navigation.navigate("SignUpForm")}>
         <Text style={styles.loginText}>
-          If don't have an account, create one here
+          Don't have an account? Create one here
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-//Lokal styling til brug i LoginFrom
+// Define local styling for LoginForm component
 const styles = StyleSheet.create({
   error: {
     color: "red",
@@ -131,5 +138,5 @@ const styles = StyleSheet.create({
   },
 });
 
-//Eksport af Loginform, således denne kan importeres og benyttes i andre komponenter
+// Export LoginForm component for use in other components
 export default LoginForm;

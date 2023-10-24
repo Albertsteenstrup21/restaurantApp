@@ -1,4 +1,4 @@
-//components/auth/SignUpForm.js
+// Import necessary modules and functions
 import React, { useState, useRef } from "react";
 import {
   Button,
@@ -12,38 +12,43 @@ import {
 } from "react-native";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
+// Import image asset
 import tasteShareIcon from "../../assets/tasteShareIcon.png";
 
+// Define SignUpForm component
 function SignUpForm({ navigation }) {
+  // Initialize Firebase auth
   const auth = getAuth();
 
-  //Instantiering af state-variabler, der skal benyttes i SignUpForm
+  // Initialize state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isCompleted, setCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  //Instantiering af en Animated.Value, som skal benyttes til at animere logoet
+  // Initialize Animated.Value for logo animation
   const spinValue = useRef(new Animated.Value(0)).current;
 
+  // Handle form submission
   const handleSubmit = async () => {
     await createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Signed in
+        // If user creation is successful, log the user object to the console
         const user = userCredential.user;
-        // ...
+        console.log(user);
+        // Direct user to profile screen
       })
       .catch((error) => {
+        // If user creation fails, set the error message state
         const errorCode = error.code;
         const errorMessage = error.message;
         setErrorMessage(errorMessage);
-        // ..
       });
   };
 
-  //Funktionen startAnimation, som starter animationen af logoet
+  // Start logo animation
   const startAnimation = () => {
-    //Reset spinValue to 0 before starting the animation
+    // Reset spinValue to 0 before starting the animation
     spinValue.setValue(0);
 
     Animated.timing(spinValue, {
@@ -53,17 +58,18 @@ function SignUpForm({ navigation }) {
     }).start();
   };
 
-  //Her defineres brugeroprettelsesknappen, som aktiverer handleSubmit igennem onPress
-  const renderButton = () => {
-    return <Button onPress={() => handleSubmit()} title="Create user" />;
-  };
-
-  //Her defineres stylingen for logoet, som inkluderer en rotation
+  // Define logo styling with rotation animation
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
 
+  // Render create user button
+  const renderButton = () => {
+    return <Button onPress={() => handleSubmit()} title="Create user" />;
+  };
+
+  // Render SignUpForm component
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => startAnimation()}>
@@ -98,7 +104,7 @@ function SignUpForm({ navigation }) {
   );
 }
 
-//Lokal styling til brug i SignUpForm
+// Define local styling for SignUpForm component
 const styles = StyleSheet.create({
   error: {
     color: "red",
@@ -126,5 +132,5 @@ const styles = StyleSheet.create({
   },
 });
 
-//Eksport af Loginform, således denne kan importeres og benyttes i andre komponenter
+// Export SignUpForm component for use in other components
 export default SignUpForm;

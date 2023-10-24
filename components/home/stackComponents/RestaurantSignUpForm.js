@@ -44,7 +44,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId = "test133";
+      userId="test5"
     }
     // Check if required fields are filled out
     if (
@@ -64,7 +64,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
       const db = getDatabase();
       const restaurantRef = ref(db, "restaurants/" + userId);
 
-      // Check if the user ID already exists in the database
+      // Check if the user ID already exists in the database, if it does, set the error message state 
       const snapshot = await get(restaurantRef);
       if (snapshot.exists()) {
         setErrorMessage("User ID already exists.");
@@ -196,6 +196,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     setIsPhotoMaximized(false);
   };
 
+  // in useEffect we check if the selectedMedia is true and if isVideoMaximized or isPhotoMaximized is true, then we set the headerShown to false, else we set it to true
   useEffect(() => {
     if (selectedMedia && (isVideoMaximized || isPhotoMaximized)) {
       navigation.setOptions({ headerShown: false });
