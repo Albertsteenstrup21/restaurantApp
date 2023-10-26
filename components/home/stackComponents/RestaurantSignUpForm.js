@@ -34,7 +34,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
   const [mediaArr, setMediaArr] = useState([]);
   const [isVideoUploaded, setIsVideoUploaded] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [isUploadSuccessful, setIsUploadSuccessful] = useState(false);
+  const [isUploadSuccessful, setIsUploadSuccessful] = useState("");
   const [isVideoMaximized, setIsVideoMaximized] = useState(false);
   const [isPhotoMaximized, setIsPhotoMaximized] = useState(false);
 
@@ -44,7 +44,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId="test5"
+      userId = "test332";
     }
     // Check if required fields are filled out
     if (
@@ -63,8 +63,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     try {
       const db = getDatabase();
       const restaurantRef = ref(db, "restaurants/" + userId);
-
-      // Check if the user ID already exists in the database, if it does, set the error message state 
+      // Check if the user ID already exists in the database, if it does, set the error message state
       const snapshot = await get(restaurantRef);
       if (snapshot.exists()) {
         setErrorMessage("User ID already exists.");
@@ -73,48 +72,52 @@ const RestaurantSignUpForm = ({ navigation }) => {
       } else {
         // Upload media to Firebase Storage
         const storage = getStorage();
-        const mediaUrls = await Promise.all(
-          media.map(async (item) => {
-            const response = await fetch(item.uri);
-            const blob = await response.blob();
-            console.log(item);
-            const mediaRef = storageRef(
-              storage,
-              "media/" + userId + "/" + item.fileName
-            );
-            let metadata = "";
-            if (item.type === "video") {
-              metadata = {
-                contentType: "video/mp4",
-              };
-            } else {
-              metadata = {
-                contentType: "image/jpeg",
-              };
-            }
-            await uploadBytes(mediaRef, blob, metadata);
-            const downloadUrl = await getDownloadURL(mediaRef);
-            return downloadUrl;
-          })
-        );
-        // Create a new restaurant in database
-        const newRestaurant = {
-          name,
-          address,
-          cuisine,
-          phone_number: phoneNumber,
-          price_range: priceRange,
-          rating,
-          media: mediaUrls,
-        };
-        await set(restaurantRef, newRestaurant);
-        setIsUploadSuccessful(true);
+        media.map(async (item) => {
+          console.log(JSON.stringify(item));
+          const response = await fetch(item.uri);
+          console.log(JSON.stringify(response));
+          const blob = await response.blob();
+          console.log(JSON.stringify(blob));
+          const mediaRef = storageRef(
+            storage,
+            "media/" + userId + "/" + item.fileName
+          );
+          let metadata = "";
+          if (item.type === "video") {
+            metadata = {
+              contentType: "video/mp4",
+            };
+          } else {
+            metadata = {
+              //20 hours later and I finally figured out that uploading as a jpg crashed the app sometimes when using firebase 10.4 and react native 9.1.2 together
+              //https://github.com/firebase/firebase-js-sdk/issues/5848#issuecomment-1053409998
+              //NaphtaliO commented on Jan 13 • edited
+              contentType: "image/png",
+            };
+          }
+          await uploadBytes(mediaRef, blob, metadata);
+          const downloadUrl = await getDownloadURL(mediaRef);
+          // Create a new restaurant in database
+          const newRestaurant = {
+            name,
+            address,
+            cuisine,
+            phone_number: phoneNumber,
+            price_range: priceRange,
+            rating,
+            media: downloadUrl,
+          };
+          console.log("newRestaurant: " + JSON.stringify(newRestaurant));
+          await set(restaurantRef, newRestaurant);
+          setIsUploadSuccessful("uploading");
+        });
+        setIsUploadSuccessful("uploaded");
       }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
       setErrorMessage(errorMessage);
-      console.log("error: " + errorMessage);
+      console.log(error);
     }
   };
 
@@ -131,15 +134,13 @@ const RestaurantSignUpForm = ({ navigation }) => {
       quality: 1,
       allowsEditing: true,
       videoMaxDuration: 20,
+      videoExportPreset: ImagePicker.VideoExportPreset.H264_640x480,
     });
 
     if (!result.canceled && result.assets.length > 0) {
       setMedia([...media, ...result.assets]);
-      setMediaArr((mediaArr) => [...result.assets ,...mediaArr]);
+      setMediaArr((mediaArr) => [...result.assets, ...mediaArr]);
       setIsVideoUploaded(true);
-      useEffect(() => {
-        console.log(mediaArr);
-      }, [mediaArr]);
     }
   };
 
@@ -155,7 +156,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
       mediaTypes: "Images",
       quality: 1,
       allowsMultipleSelection: true,
-    });
+      UIImagePickerControllerQualityType: ImagePicker.UIImagePickerControllerQualityType.VGA640x480,
+      });
 
     if (!result.canceled && result.assets.length > 0) {
       setMedia([...media, ...result.assets]);
@@ -205,7 +207,13 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   }, [isVideoMaximized, isPhotoMaximized, selectedMedia]);
 
-  if (isUploadSuccessful) {
+  if (isUploadSuccessful === "uploaded") {
+    return (
+      <View style={styles.container}>
+        <Text >Uploading...</Text>
+      </View>
+    );
+  } else if (isUploadSuccessful === "uploading") {
     return (
       <View style={styles.container}>
         <Text style={styles.successMessage}>Upload successful!</Text>
@@ -413,6 +421,7 @@ const styles = StyleSheet.create({
   minimizeButtonText: {
     color: "black",
     fontWeight: "bold",
+    marginTop: 10,
   },
   backButton: {
     position: "absolute",
