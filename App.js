@@ -13,14 +13,14 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import ExplorerScreen from "./components/home/ExplorerScreen";
-import MessageScreen from "./components/home/MessageScreen";
+import MapScreen from "./components/home/mapsComponents/MapScreen";
 import StackNavigator from "./components/StackNavigator";
 import SignUpForm from "./components/auth/SignUpForm";
 import LoginForm from "./components/auth/LoginForm";
 
-import { LogBox } from 'react-native';
-LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
-LogBox.ignoreAllLogs();//Ignore all log notifications
+import { LogBox } from "react-native";
+LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by Map
+LogBox.ignoreAllLogs(); //Ignore all log notifications
 
 const AuthStack = createNativeStackNavigator(); // Stack for authentication flow
 const Tab = createBottomTabNavigator(); // Main app navigation
@@ -69,7 +69,7 @@ export default function App() {
                 iconName = focused
                   ? "ios-restaurant"
                   : "ios-restaurant-outline";
-              } else if (route.name === "Message") {
+              } else if (route.name === "Map") {
                 iconName = focused
                   ? "ios-chatbubble"
                   : "ios-chatbubble-outline";
@@ -85,7 +85,7 @@ export default function App() {
         >
           <Tab.Screen name="ProfileScreen" component={StackNavigator} />
           <Tab.Screen name="Explorer" component={ExplorerScreen} />
-          <Tab.Screen name="Message" component={MessageScreen} />
+          <Tab.Screen name="Map" component={MapScreen} />
         </Tab.Navigator>
       ) : (
         <AuthStack.Navigator>

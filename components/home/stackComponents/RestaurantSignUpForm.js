@@ -21,6 +21,7 @@ import { Video } from "expo-av";
 import { getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
 const RestaurantSignUpForm = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -39,12 +40,13 @@ const RestaurantSignUpForm = ({ navigation }) => {
   const [isPhotoMaximized, setIsPhotoMaximized] = useState(false);
 
   const handleSignUp = async () => {
+    
     // Get the user ID of the currently logged in user
     const auth = getAuth();
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId = "test332";
+      userId = "test41122";
     }
     // Check if required fields are filled out
     if (
@@ -61,6 +63,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
 
     try {
+      setIsUploadSuccessful("uploading");
       const db = getDatabase();
       const restaurantRef = ref(db, "restaurants/" + userId);
       // Check if the user ID already exists in the database, if it does, set the error message state
@@ -72,45 +75,37 @@ const RestaurantSignUpForm = ({ navigation }) => {
       } else {
         // Upload media to Firebase Storage
         const storage = getStorage();
-        media.map(async (item) => {
-          console.log(JSON.stringify(item));
+        // Upload media to Firebase Storage and retrieve download URLs
+        const downloadUrlPromises = mediaArr.map(async (item) => {
           const response = await fetch(item.uri);
-          console.log(JSON.stringify(response));
           const blob = await response.blob();
-          console.log(JSON.stringify(blob));
           const mediaRef = storageRef(
             storage,
             "media/" + userId + "/" + item.fileName
           );
-          let metadata = "";
-          if (item.type === "video") {
-            metadata = {
-              contentType: "video/mp4",
-            };
-          } else {
-            metadata = {
-              //20 hours later and I finally figured out that uploading as a jpg crashed the app sometimes when using firebase 10.4 and react native 9.1.2 together
-              //https://github.com/firebase/firebase-js-sdk/issues/5848#issuecomment-1053409998
-              //NaphtaliO commented on Jan 13 • edited
-              contentType: "image/png",
-            };
-          }
+          let metadata =
+            item.type === "video"
+              ? { contentType: "video/mp4" }
+              : { contentType: "image/jpeg" };
           await uploadBytes(mediaRef, blob, metadata);
-          const downloadUrl = await getDownloadURL(mediaRef);
-          // Create a new restaurant in database
-          const newRestaurant = {
-            name,
-            address,
-            cuisine,
-            phone_number: phoneNumber,
-            price_range: priceRange,
-            rating,
-            media: downloadUrl,
-          };
-          console.log("newRestaurant: " + JSON.stringify(newRestaurant));
-          await set(restaurantRef, newRestaurant);
-          setIsUploadSuccessful("uploading");
+          return getDownloadURL(mediaRef);
         });
+
+        const downloadUrls = await Promise.all(downloadUrlPromises);
+        const mediaWithDownloadUrls = downloadUrls.map(downloadUrl => ({ downloadUrl }));
+
+        // Create a new restaurant in database
+        const newRestaurant = {
+          name,
+          address,
+          cuisine,
+          phone_number: phoneNumber,
+          price_range: priceRange,
+          rating,
+          media: mediaWithDownloadUrls,
+        };
+        console.log("newRestaurant: " + JSON.stringify(newRestaurant));
+        await set(restaurantRef, newRestaurant);
         setIsUploadSuccessful("uploaded");
       }
     } catch (error) {
@@ -156,8 +151,9 @@ const RestaurantSignUpForm = ({ navigation }) => {
       mediaTypes: "Images",
       quality: 1,
       allowsMultipleSelection: true,
-      UIImagePickerControllerQualityType: ImagePicker.UIImagePickerControllerQualityType.VGA640x480,
-      });
+      UIImagePickerControllerQualityType:
+        ImagePicker.UIImagePickerControllerQualityType.VGA640x480,
+    });
 
     if (!result.canceled && result.assets.length > 0) {
       setMedia([...media, ...result.assets]);
@@ -207,13 +203,13 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   }, [isVideoMaximized, isPhotoMaximized, selectedMedia]);
 
-  if (isUploadSuccessful === "uploaded") {
+  if (isUploadSuccessful === "uploading") {
     return (
       <View style={styles.container}>
-        <Text >Uploading...</Text>
+        <Text>Uploading...</Text>
       </View>
     );
-  } else if (isUploadSuccessful === "uploading") {
+  } else if (isUploadSuccessful === "uploaded") {
     return (
       <View style={styles.container}>
         <Text style={styles.successMessage}>Upload successful!</Text>
@@ -331,13 +327,45 @@ const RestaurantSignUpForm = ({ navigation }) => {
           style={[styles.inputField, !name && styles.requiredInput]}
           required
         />
-        <TextInput
-          placeholder="Address"
-          value={address}
-          onChangeText={(text) => setAddress(text)}
-          style={[styles.inputField, !address && styles.requiredInput]}
-          required
-        />
+        <View>
+          <GooglePlacesAutocomplete
+            placeholder="Enter Location"
+            minLength={2}
+            autoFocus={false}
+            returnKeyType={"default"}
+            fetchDetails={true}
+            disableScroll={true}
+            styles={{
+              textInputContainer: {
+                backgroundColor: "transparent",
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+              },
+              textInput: {
+                marginLeft: 0,
+                marginRight: 0,
+                height: 38,
+                color: "#5d5d5d",
+                fontSize: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: "#C9C9CE",
+                marginTop: 10,
+              },
+              predefinedPlacesDescription: {
+                color: "#1faadb",
+              },
+            }}
+            query={{
+              key: "AIzaSyAWbhGAh1TyJMwmGaQudSUbJJfsRfHxcT4",
+              language: "dk", // language of the results
+            }}
+            onPress={(data, details = null) => {
+              const lat = details.geometry.location.lat;
+              const lng = details.geometry.location.lng;
+              setAddress({ lat, lng });
+            }}
+          />
+        </View>
         <TextInput
           placeholder="Cuisine"
           value={cuisine}
