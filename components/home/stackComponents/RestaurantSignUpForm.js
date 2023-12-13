@@ -15,6 +15,7 @@ import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
+  uploadBytesResumable,
 } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 import { Video } from "expo-av";
@@ -22,6 +23,8 @@ import { getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import YOUR_API_KEY from "../../../keys";
+
 
 const RestaurantSignUpForm = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -40,13 +43,12 @@ const RestaurantSignUpForm = ({ navigation }) => {
   const [isPhotoMaximized, setIsPhotoMaximized] = useState(false);
 
   const handleSignUp = async () => {
-    
     // Get the user ID of the currently logged in user
     const auth = getAuth();
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId = "test41122";
+      userId = "test1234";
     }
     // Check if required fields are filled out
     if (
@@ -63,7 +65,6 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
 
     try {
-      setIsUploadSuccessful("uploading");
       const db = getDatabase();
       const restaurantRef = ref(db, "restaurants/" + userId);
       // Check if the user ID already exists in the database, if it does, set the error message state
@@ -73,6 +74,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
         console.log("User ID already exists.");
         return;
       } else {
+        setIsUploadSuccessful("uploading");
         // Upload media to Firebase Storage
         const storage = getStorage();
         // Upload media to Firebase Storage and retrieve download URLs
@@ -87,25 +89,32 @@ const RestaurantSignUpForm = ({ navigation }) => {
             item.type === "video"
               ? { contentType: "video/mp4" }
               : { contentType: "image/jpeg" };
-          await uploadBytes(mediaRef, blob, metadata);
+
+          await uploadBytesResumable(mediaRef, blob, metadata);
           return getDownloadURL(mediaRef);
         });
 
-        const downloadUrls = await Promise.all(downloadUrlPromises);
-        const mediaWithDownloadUrls = downloadUrls.map(downloadUrl => ({ downloadUrl }));
+        try {
+          const downloadUrls = await Promise.all(downloadUrlPromises);
+          const mediaWithDownloadUrls = downloadUrls.map((downloadUrl) => ({
+            downloadUrl,
+          }));
 
-        // Create a new restaurant in database
-        const newRestaurant = {
-          name,
-          address,
-          cuisine,
-          phone_number: phoneNumber,
-          price_range: priceRange,
-          rating,
-          media: mediaWithDownloadUrls,
-        };
-        console.log("newRestaurant: " + JSON.stringify(newRestaurant));
-        await set(restaurantRef, newRestaurant);
+          // Create a new restaurant in database
+          const newRestaurant = {
+            name,
+            address,
+            cuisine,
+            phone_number: phoneNumber,
+            price_range: priceRange,
+            rating,
+            media: mediaWithDownloadUrls,
+          };
+          console.log("newRestaurant: " + JSON.stringify(newRestaurant));
+          await set(restaurantRef, newRestaurant);
+        } catch (error) {
+          console.error("Error during file upload:", error);
+        }
         setIsUploadSuccessful("uploaded");
       }
     } catch (error) {
@@ -152,7 +161,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
       quality: 1,
       allowsMultipleSelection: true,
       UIImagePickerControllerQualityType:
-        ImagePicker.UIImagePickerControllerQualityType.VGA640x480,
+        ImagePicker.UIImagePickerControllerQualityType.Low,
     });
 
     if (!result.canceled && result.assets.length > 0) {
@@ -261,7 +270,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
   }
 
   return (
-    <ScrollView>
+    <ScrollView keyboardShouldPersistTaps='always'>
       <View style={styles.container}>
         <View style={styles.uploadContainer}>
           <Button
@@ -327,45 +336,49 @@ const RestaurantSignUpForm = ({ navigation }) => {
           style={[styles.inputField, !name && styles.requiredInput]}
           required
         />
-        <View>
-          <GooglePlacesAutocomplete
-            placeholder="Enter Location"
-            minLength={2}
-            autoFocus={false}
-            returnKeyType={"default"}
-            fetchDetails={true}
-            disableScroll={true}
-            styles={{
-              textInputContainer: {
-                backgroundColor: "transparent",
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-              },
-              textInput: {
-                marginLeft: 0,
-                marginRight: 0,
-                height: 38,
-                color: "#5d5d5d",
-                fontSize: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: "#C9C9CE",
-                marginTop: 10,
-              },
-              predefinedPlacesDescription: {
-                color: "#1faadb",
-              },
-            }}
-            query={{
-              key: "AIzaSyAWbhGAh1TyJMwmGaQudSUbJJfsRfHxcT4",
-              language: "dk", // language of the results
-            }}
-            onPress={(data, details = null) => {
-              const lat = details.geometry.location.lat;
-              const lng = details.geometry.location.lng;
-              setAddress({ lat, lng });
-            }}
-          />
-        </View>
+ 
+        <GooglePlacesAutocomplete
+          placeholder="Enter Location"
+          minLength={2}
+          autoFocus={false}
+          returnKeyType={"default"}
+          fetchDetails={true}
+          disableScroll={true}
+          listViewDisplayed={false}
+          styles={{
+            zIndex: 1,
+            textInputContainer: {
+              backgroundColor: "transparent",
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+            },
+            textInput: {
+              marginLeft: 0,
+              marginRight: 0,
+              height: 38,
+              color: "#5d5d5d",
+              fontSize: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: "#C9C9CE",
+              marginTop: 10,
+            },
+            predefinedPlacesDescription: {
+              color: "#1faadb",
+            },
+          }}
+          query={{
+            key: YOUR_API_KEY,
+            language: "dk", // language of the results
+          }}
+          onPress={(data, details = null) => {
+            const lat = details.geometry.location.lat;
+            const lng = details.geometry.location.lng;
+            setAddress({ lat, lng });
+          }}
+          onFail={(error) => console.log(error)}
+          onNotFound={() => console.log("no results")}
+        />
+  
         <TextInput
           placeholder="Cuisine"
           value={cuisine}

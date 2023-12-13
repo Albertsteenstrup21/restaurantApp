@@ -13,18 +13,35 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { Accuracy } from "expo-location";
 import { useState, useEffect } from "react";
+import { getDatabase, ref, onValue } from "firebase/database";
 
 export default function App() {
   const [hasLocationPermission, setlocationPermission] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [region, setRegion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [restaurantData, setRestaurantData] = useState([]);
 
   const getLocationPermission = async () => {
     await Location.requestForegroundPermissionsAsync().then((item) => {
       setlocationPermission(item.granted);
     });
   };
+
+  // Fetch data from Firebase
+  useEffect(() => {
+    const db = getDatabase();
+    const starCountRef = ref(db, "restaurants");
+    onValue(starCountRef, (snapshot) => {
+      const data = snapshot.val();
+      const newRestaurants = Object.keys(data).map((key) => ({
+        id: key,
+        ...data[key],
+      }));
+      console.log(newRestaurants);
+      setRestaurantData(newRestaurants);
+    });
+  }, []);
 
   useEffect(() => {
     getLocationPermission();
@@ -62,11 +79,19 @@ export default function App() {
           showsMyLocationButton
           region={region}
         >
-          <Marker
-            coordinate={{ latitude: 55.676195, longitude: 12.569419 }}
-            title="Rådhuspladsen"
-            description="blablabal"
-          />
+          {restaurantData.map((item, index) => (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: item.address.lat,
+                longitude: item.address.lng,
+              }}
+              View style={styles.marker}
+              title={item.name}
+              description={item.cuisine}
+              
+            />
+          ))}
         </MapView>
       )}
     </SafeAreaView>
@@ -84,5 +109,10 @@ const styles = StyleSheet.create({
   map: { flex: 1 },
   infoText: {
     fontSize: 15,
+  },
+  marker: {
+    backgroundColor: "#550bbc",
+    padding: 5,
+    borderRadius: 5,
   },
 });
