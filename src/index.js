@@ -1,5 +1,13 @@
-import { View, Text, StyleSheet, Dimensions, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Image,
+  TouchableHighlight,
+} from "react-native";
 import React, { useState, useEffect } from "react";
+import { useNavigation } from '@react-navigation/native';
 import { getDatabase, ref, onValue } from "firebase/database";
 import Carousel from "react-native-snap-carousel";
 import { Video } from "expo-av";
@@ -8,7 +16,7 @@ import axios from "axios";
 import * as Location from "expo-location";
 
 import { firebaseConfig } from "../config";
-import YOUR_API_KEY from "../keys";
+import YOUR_API_KEY from "../keys/keys";
 
 const FetchDatabase = () => {
   const [restaurantData, setRestaurantData] = useState([]);
@@ -18,6 +26,8 @@ const FetchDatabase = () => {
   });
   const [hasLocationPermission, setlocationPermission] = useState(false);
   const [distances, setDistances] = useState({}); // Initialize state to store distances
+
+  const navigation = useNavigation();
 
   // Fetch data from Firebase
   useEffect(() => {
@@ -63,43 +73,48 @@ const FetchDatabase = () => {
     });
   };
 
-  const fetchAndSetDistance = async (item, index) => {
-    console.log("Fetching distance for:", item.address.lat, item.address.lng);
-    const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${userLocation.latitude},${userLocation.longitude}&destinations=${item.address.lat},${item.address.lng}&key=${YOUR_API_KEY}`;
-    console.log("API Request URL:", apiUrl);
+  // const fetchAndSetDistance = async (item, index) => {
+  //   console.log("Fetching distance for:", item.address.lat, item.address.lng);
+  //   const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${userLocation.latitude},${userLocation.longitude}&destinations=${item.address.lat},${item.address.lng}&key=${YOUR_API_KEY}`;
+  //   console.log("API Request URL:", apiUrl);
 
-    try {
-      const response = await axios.get(apiUrl);
-      console.log("API Response:", response.data);
+  //   try {
+  //     const response = await axios.get(apiUrl);
+  //     console.log("API Response:", response.data);
 
-      if (response.data.rows[0].elements[0].status === "OK") {
-        if (response.data.rows[0].elements[0].distance) {
-          setDistances((prevDistances) => ({
-            ...prevDistances,
-            [index]: response.data.rows[0].elements[0].distance.text,
-          }));
-        } else {
-          console.log(
-            "Distance data not found for this location:",
-            item.address
-          );
-        }
-      } else {
-        console.log(
-          "Error calculating distance for this location:",
-          item.address
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching distance:", error);
-    }
+  //     if (response.data.rows[0].elements[0].status === "OK") {
+  //       if (response.data.rows[0].elements[0].distance) {
+  //         setDistances((prevDistances) => ({
+  //           ...prevDistances,
+  //           [index]: response.data.rows[0].elements[0].distance.text,
+  //         }));
+  //       } else {
+  //         console.log(
+  //           "Distance data not found for this location:",
+  //           item.address
+  //         );
+  //       }
+  //     } else {
+  //       console.log(
+  //         "Error calculating distance for this location:",
+  //         item.address
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching distance:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   restaurantData.forEach((item, index) => {
+  //     fetchAndSetDistance(item, index);
+  //   });
+  // }, [restaurantData, userLocation]);
+
+  const sendCoordToMaps = (lat, lng) => {
+    console.log("Sending coordinates to maps");
+    navigation.navigate('../mapsComponents/MapScreen', { latitude: lat, longitude: lng });
   };
-
-  useEffect(() => {
-    restaurantData.forEach((item, index) => {
-      fetchAndSetDistance(item, index);
-    });
-  }, [restaurantData, userLocation]);
 
   // Render data from Firebase in a carousel with video and overlay
   return (
@@ -128,10 +143,14 @@ const FetchDatabase = () => {
                 </View>
               </View>
               <View style={styles.iconContainer}>
-                <Image source={MapsIcon} style={styles.icon} />
-                <Text style={styles.distanceText}>
-                    {distance ? distance : "Loading..."}
-                </Text>
+                <TouchableHighlight
+                  onPress={() => sendCoordToMaps(item.address.lat, item.address.lng)}
+                  >
+                  <Image source={MapsIcon} style={styles.icon} />
+                </TouchableHighlight>
+                {/* <Text style={styles.distanceText}>
+                  {distance ? distance : "Loading..."}
+                </Text> */}
               </View>
             </View>
           );
@@ -181,8 +200,8 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: "relative",
-    top: '-42%',
-    right: '-38%',
+    top: "-42%",
+    right: "-38%",
     width: 35,
     height: 50,
   },
@@ -191,17 +210,13 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   distanceText: {
-    // Add these styles specifically for the distance text under the icon
-    fontSize: 12, // Adjust the font size as needed
+    fontSize: 12,
     color: "white",
-    position: 'absolute', // Position absolutely to overlay on top of the iconContainer
-    top: '110%', // Position right below the icon
+    position: "absolute",
+    top: "110%",
     left: 0,
     right: 0,
-    textAlign: 'center', // Center the text horizontally
-    overflow: 'hidden', // Hide overflow
-    whiteSpace: 'nowrap', // Keep text on the same line
-    textOverflow: 'ellipsis', // Use ellipsis for overflow
+    textAlign: "center",
   },
 });
 

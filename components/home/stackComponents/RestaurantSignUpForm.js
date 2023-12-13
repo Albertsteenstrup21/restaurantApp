@@ -23,7 +23,7 @@ import { getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import YOUR_API_KEY from "../../../keys";
+import YOUR_API_KEY from "../../../keys/keys";
 
 
 const RestaurantSignUpForm = ({ navigation }) => {
