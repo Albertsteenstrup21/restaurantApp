@@ -1,22 +1,21 @@
+//components/home/HomeScreen.js
+
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
-  Image,
-  TouchableHighlight,
+  FlatList,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
-import Carousel from "react-native-snap-carousel";
-import { Video } from "expo-av";
-import MapsIcon from "../../assets/MapsIcon.png";
 import axios from "axios";
 import * as Location from "expo-location";
 import { firebaseConfig } from "../../config";
 import YOUR_API_KEY from "../../keys/keys";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
-const IndexScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation }) => {
   const [restaurantData, setRestaurantData] = useState([]);
   const [userLocation, setUserLocation] = useState({
     latitude: null,
@@ -25,6 +24,7 @@ const IndexScreen = ({ navigation }) => {
   const [hasLocationPermission, setlocationPermission] = useState(false);
   const [distances, setDistances] = useState({}); // Initialize state to store distances
   const [ready, setReady] = useState(false);
+  
 
   // Fetch data from Firebase
   useEffect(() => {
@@ -110,57 +110,40 @@ const IndexScreen = ({ navigation }) => {
       fetchAndSetDistance(item, index);
     });
   }, [restaurantData, userLocation]);
-  // Render data from Firebase in a carousel with video and overlay
+
+  // Render data from Firebase in a list
   return (
-    <View>
+    <View style={styles.container}>
+        
+      <TouchableOpacity
+        style={styles.settingsIcon}
+        onPress={() => navigation.navigate("ProfileScreen")}
+      >
+        <Ionicons name="settings-outline" size={30} />
+      </TouchableOpacity>
       {ready ? (
-        // when ready state is false, show loading text
-        // when ready state is true, show the carousel
-        <Carousel
+      <View style={styles.listContainer}>
+        <FlatList
           data={restaurantData}
+          keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const distance = distances[index]; // Get the distance from the state
+            // Render each item
             return (
-              <View style={styles.slide}>
-                {
-                  // Check if the first media item exists and is a video
-                  item.media && item.media.length > 0 && (
-                    <Video
-                      source={{ uri: item.media[0].downloadUrl }}
-                      style={StyleSheet.absoluteFillObject}
-                      resizeMode="cover"
-                      shouldPlay
-                      isLooping
-                    />
-                  )
-                }
-                <View style={styles.overlay}>
-                  <View style={styles.textContainer}>
-                    <Text style={styles.text}>{item.name}</Text>
-                    <Text style={styles.text}>{item.cuisine}</Text>
-                    <Text style={styles.text}>{item.phone_number}</Text>
-                    <Text style={styles.text}>{item.price_range}</Text>
-                    <Text style={styles.text}>{item.rating}</Text>
-                  </View>
-                </View>
-                <View style={styles.iconContainer}>
-                  <Image source={MapsIcon} style={styles.icon} />
-
-                  <Text style={styles.distanceText}>
-                    {distance ? distance : "Loading..."}
-                  </Text>
-                </View>
+              <View style={styles.listItem}>
+                <Text style={styles.listItemTextBold}>{item.name}</Text>
+                <Text style={styles.listItemText}>
+                  {distance ? distance : "Loading..."}
+                </Text>
+                <Text style={styles.listItemText}>{item.cuisine}</Text>
+                <Text style={styles.listItemText}>{item.phone_number}</Text>
+                <Text style={styles.listItemText}>{item.price_range}</Text>
+                <Text style={styles.listItemText}>{item.rating}</Text>
               </View>
             );
           }}
-          sliderHeight={(Dimensions.get("window").width * 16) / 9}
-          itemHeight={(Dimensions.get("window").width * 16) / 9}
-          sliderWidth={Dimensions.get("window").width}
-          itemWidth={Dimensions.get("window").width}
-          vertical={true}
-          enableSnap={true}
-          activeSlideAlignment=""
         />
+      </View>
       ) : (
         <Text>Loading...</Text>
       )}
@@ -169,24 +152,35 @@ const IndexScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  slide: {
+  container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  overlay: {
+  settingsIcon: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    top: 10, // Adjust top and right as needed
+    right: 10,
+    zIndex: 1, // Ensures the icon stays above other components
+  },
+  listContainer: {
+    flex: 1,
+    marginTop: 50, // Adjust this value to ensure list starts below the settings icon
+  },
+  listItem: {
+    flexDirection: "column", // Change to 'column' for vertical stacking
     padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 5,
+    alignItems: "center", // Center items horizontally
+  },
+  listItemTextBold: {
+    textAlign: "center", // Center-align text
+    marginBottom: 5,
+    fontWeight: 'bold', // Make text bold
+  },
+  listItemText: {
+    textAlign: "center", // Center-align text
+    marginBottom: 5,
   },
   textContainer: {
     flex: 1,
@@ -197,28 +191,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
-    color: "white",
-  },
-  iconContainer: {
-    position: "relative",
-    top: "-42%",
-    right: "-38%",
-    width: 35,
-    height: 50,
-  },
-  icon: {
-    width: "100%",
-    height: "100%",
-  },
-  distanceText: {
-    fontSize: 12,
-    color: "white",
-    position: "absolute",
-    top: "110%",
-    left: 0,
-    right: 0,
-    textAlign: "center",
+    color: "black",
   },
 });
 
-export default IndexScreen;
+export default HomeScreen;

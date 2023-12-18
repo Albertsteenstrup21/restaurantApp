@@ -1,6 +1,6 @@
-// components/home/ProfileScreen.js
+//components/home/ProfileScreen.js
 
-//importere react
+//importerer react
 import React from "react";
 import { Text, View, Button } from "react-native";
 import { initializeApp } from "firebase/app";
@@ -13,16 +13,18 @@ export default function ProfileScreen({ navigation, route }) {
   };
 
   const auth = getAuth();
-  const user = auth.currentUser
+  const user = auth.currentUser;
   //handleLogout håndterer log ud af en aktiv bruger.
   //Metoden er en prædefineret metode, som firebase stiller tilrådighed  https://firebase.google.com/docs/auth/web/password-auth#next_steps
   //Metoden er et asynkrontkald.
   const handleLogOut = async () => {
-      await signOut(auth).then(() => {
-          // Sign-out successful.
-        }).catch((error) => {
-          // An error happened.
-        });
+    await signOut(auth)
+      .then(() => {
+        // Sign-out successful.
+      })
+      .catch((error) => {
+        // An error happened.
+      });
   };
 
   if (!auth.currentUser) {
@@ -36,10 +38,9 @@ export default function ProfileScreen({ navigation, route }) {
   }
 
   return (
-
-    <View >
-    <Text>Current user: {user.email}</Text>
-    <Button onPress={() => handleLogOut()} title="Log out" />
+    <View>
+      <Text>Current user: {user.email}</Text>
+      <Button onPress={() => handleLogOut()} title="Log out" />
 
       <Button
         title="Reset password"

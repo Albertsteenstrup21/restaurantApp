@@ -15,12 +15,13 @@ import { Accuracy } from "expo-location";
 import { useState, useEffect } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
 
-export default function App() {
+export default function MapScreen({route}) {
   const [hasLocationPermission, setlocationPermission] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [region, setRegion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [restaurantData, setRestaurantData] = useState([]);
+  const [directions, setDirections] = useState(null);
 
   const getLocationPermission = async () => {
     await Location.requestForegroundPermissionsAsync().then((item) => {
@@ -67,6 +68,13 @@ export default function App() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (route.params?.directions) {
+      setDirections(route.params.directions);
+      // TODO: Parse the directions and update the map markers or polylines
+    }
+  }, [route.params?.directions]);
+
   return (
     <SafeAreaView style={styles.container}>
       {loading ? (
@@ -86,10 +94,10 @@ export default function App() {
                 latitude: item.address.lat,
                 longitude: item.address.lng,
               }}
-              View style={styles.marker}
+              View
+              style={styles.marker}
               title={item.name}
               description={item.cuisine}
-              
             />
           ))}
         </MapView>

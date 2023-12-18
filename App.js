@@ -70,11 +70,9 @@ export default function App() {
                   ? "ios-restaurant"
                   : "ios-restaurant-outline";
               } else if (route.name === "Map") {
-                iconName = focused
-                  ? "ios-chatbubble"
-                  : "ios-chatbubble-outline";
-              } else if (route.name === "ProfileScreen") {
-                iconName = focused ? "ios-person" : "ios-person-outline";
+                iconName = focused ? "ios-map" : "ios-map-outline";
+              } else if (route.name === "Home") {
+                iconName = focused ? "ios-home" : "ios-home-outline";
               }
 
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -83,7 +81,7 @@ export default function App() {
             tabBarInactiveTintColor: "gray",
           })}
         >
-          <Tab.Screen name="ProfileScreen" component={StackNavigator} />
+          <Tab.Screen name="Home" component={StackNavigator} />
           <Tab.Screen name="Explorer" component={ExplorerScreen} />
           <Tab.Screen name="Map" component={MapScreen} />
         </Tab.Navigator>
