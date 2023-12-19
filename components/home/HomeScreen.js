@@ -1,4 +1,4 @@
-//components/home/HomeScreen.js
+// components/home/HomeScreen.js
 
 import {
   View,
@@ -14,6 +14,7 @@ import * as Location from "expo-location";
 import { firebaseConfig } from "../../config";
 import YOUR_API_KEY from "../../keys/keys";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { Picker } from "@react-native-picker/picker"; // Import Picker for dropdown
 
 const HomeScreen = ({ navigation }) => {
   const [restaurantData, setRestaurantData] = useState([]);
@@ -22,9 +23,51 @@ const HomeScreen = ({ navigation }) => {
     longitude: null,
   });
   const [hasLocationPermission, setlocationPermission] = useState(false);
-  const [distances, setDistances] = useState({}); // Initialize state to store distances
+  //   const [distances, setDistances] = useState({}); // Initialize state to store distances
   const [ready, setReady] = useState(false);
-  
+  const [sortCriteria, setSortCriteria] = useState("name"); // State for sorting criteria
+  const [showPicker, setShowPicker] = useState(false); // State to control visibility of picker
+  const [sortedRestaurantData, setSortedRestaurantData] = useState([]); // State for sorted data
+  const [distanceFetched, setDistanceFetched] = useState({}); // New state to track fetched distances
+
+  useEffect(() => {
+    // This function will sort the restaurant data based on the selected criteria
+    const sortRestaurants = () => {
+      const sortedData = [...restaurantData].sort((a, b) => {
+        switch (sortCriteria) {
+          case "name":
+            return a.name.localeCompare(b.name);
+          case "distance":
+            // Assuming distance is a string like '23.4 km' and we compare by the numeric part
+            return parseFloat(a.distance) - parseFloat(b.distance);
+          case "expertRating":
+            return b.expertRating - a.expertRating;
+          case "userRating":
+            return b.userRating - a.userRating;
+          case "price_range":
+            // Assuming price_range is a numeric value
+            return a.price_range.localeCompare(b.price_range);
+          default:
+            return 0;
+        }
+      });
+
+      return sortedData;
+    };
+
+    if (
+      restaurantData.length > 0 &&
+      Object.keys(distanceFetched).length === restaurantData.length
+    ) {
+      // Only sort and update the state if all distances have been fetched to prevent multiple updates
+      const sortedData = sortRestaurants();
+      setSortedRestaurantData(sortedData);
+    }
+  }, [sortCriteria, restaurantData, distanceFetched]); // Add distanceFetched to dependencies
+
+  const togglePicker = () => {
+    setShowPicker(!showPicker); // Toggle visibility of picker
+  };
 
   // Fetch data from Firebase
   useEffect(() => {
@@ -74,6 +117,8 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const fetchAndSetDistance = async (item, index) => {
+    if (distanceFetched[item.id]) return; // Skip if already fetched
+
     console.log("Fetching distance for:", item.address.lat, item.address.lng);
     const apiUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${userLocation.latitude},${userLocation.longitude}&destinations=${item.address.lat},${item.address.lng}&key=${YOUR_API_KEY}`;
     console.log("API Request URL:", apiUrl);
@@ -84,10 +129,19 @@ const HomeScreen = ({ navigation }) => {
 
       if (response.data.rows[0].elements[0].status === "OK") {
         if (response.data.rows[0].elements[0].distance) {
-          setDistances((prevDistances) => ({
-            ...prevDistances,
-            [index]: response.data.rows[0].elements[0].distance.text,
-          }));
+          const distance = response.data.rows[0].elements[0].distance.text;
+          setDistanceFetched((prevState) => ({
+            ...prevState,
+            [item.id]: true,
+          })); // Mark as fetched
+          setRestaurantData((currentData) =>
+            currentData.map((restaurant) => {
+              if (restaurant.id === item.id) {
+                return { ...restaurant, distance }; // Add distance to the restaurant object
+              }
+              return restaurant;
+            })
+          );
         } else {
           console.log(
             "Distance data not found for this location:",
@@ -106,15 +160,38 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    restaurantData.forEach((item, index) => {
-      fetchAndSetDistance(item, index);
-    });
-  }, [restaurantData, userLocation]);
+    if (userLocation.latitude && userLocation.longitude) {
+      restaurantData.forEach((item) => {
+        fetchAndSetDistance(item);
+      });
+    }
+  }, [restaurantData, userLocation, distanceFetched]); // Add distanceFetched to dependencies
 
   // Render data from Firebase in a list
   return (
     <View style={styles.container}>
-        
+      <TouchableOpacity
+        style={styles.filterIcon}
+        onPress={togglePicker} // Toggle picker visibility on icon press
+      >
+        <Ionicons name="filter" size={30} />
+      </TouchableOpacity>
+
+      {showPicker && ( // Conditional rendering of picker
+        <View>
+          <Picker
+            selectedValue={sortCriteria}
+            onValueChange={(itemValue) => setSortCriteria(itemValue)}
+            style={styles.pickerStyle}
+          >
+            <Picker.Item label="Name" value="name" />
+            <Picker.Item label="Distance" value="distance" />
+            <Picker.Item label="Expert Rating" value="expertRating" />
+            <Picker.Item label="User Rating" value="userRating" />
+            <Picker.Item label="Price Range" value="price_range" />
+          </Picker>
+        </View>
+      )}
       <TouchableOpacity
         style={styles.settingsIcon}
         onPress={() => navigation.navigate("ProfileScreen")}
@@ -122,28 +199,28 @@ const HomeScreen = ({ navigation }) => {
         <Ionicons name="settings-outline" size={30} />
       </TouchableOpacity>
       {ready ? (
-      <View style={styles.listContainer}>
-        <FlatList
-          data={restaurantData}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => {
-            const distance = distances[index]; // Get the distance from the state
-            // Render each item
-            return (
-              <View style={styles.listItem}>
-                <Text style={styles.listItemTextBold}>{item.name}</Text>
-                <Text style={styles.listItemText}>
-                  {distance ? distance : "Loading..."}
-                </Text>
-                <Text style={styles.listItemText}>{item.cuisine}</Text>
-                <Text style={styles.listItemText}>{item.phone_number}</Text>
-                <Text style={styles.listItemText}>{item.price_range}</Text>
-                <Text style={styles.listItemText}>{item.rating}</Text>
-              </View>
-            );
-          }}
-        />
-      </View>
+        <View style={styles.listContainer}>
+          <FlatList
+            data={sortedRestaurantData}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => {
+              // Render each item
+              return (
+                <View style={styles.listItem}>
+                  <Text style={styles.listItemTextBold}>{item.name}</Text>
+                  <Text style={styles.listItemText}>
+                    {item.distance ? item.distance : "Loading..."}{" "}
+                  </Text>
+                  <Text style={styles.listItemText}>{item.cuisine}</Text>
+                  <Text style={styles.listItemText}>{item.phone_number}</Text>
+                  <Text style={styles.listItemText}>{item.price_range}</Text>
+                  <Text style={styles.listItemText}>{item.expertRating}</Text>
+                  <Text style={styles.listItemText}>{item.userRating}</Text>
+                </View>
+              );
+            }}
+          />
+        </View>
       ) : (
         <Text>Loading...</Text>
       )}
@@ -176,7 +253,7 @@ const styles = StyleSheet.create({
   listItemTextBold: {
     textAlign: "center", // Center-align text
     marginBottom: 5,
-    fontWeight: 'bold', // Make text bold
+    fontWeight: "bold", // Make text bold
   },
   listItemText: {
     textAlign: "center", // Center-align text

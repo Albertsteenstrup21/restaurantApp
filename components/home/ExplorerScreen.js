@@ -140,11 +140,16 @@ const IndexScreen = ({ navigation }) => {
                     <Text style={styles.text}>{item.cuisine}</Text>
                     <Text style={styles.text}>{item.phone_number}</Text>
                     <Text style={styles.text}>{item.price_range}</Text>
-                    <Text style={styles.text}>{item.rating}</Text>
+                    <Text style={styles.text}>{item.expertRating}</Text>
+                    <Text style={styles.text}>{item.userRating}</Text>
                   </View>
                 </View>
                 <View style={styles.iconContainer}>
-                  <Image source={MapsIcon} style={styles.icon} />
+                  <TouchableHighlight
+                    onPress={() => navigation.navigate("MapScreen")}
+                  >
+                    <Image source={MapsIcon} style={styles.icon} />
+                  </TouchableHighlight>
 
                   <Text style={styles.distanceText}>
                     {distance ? distance : "Loading..."}

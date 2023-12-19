@@ -7,6 +7,7 @@ import {
   Button,
   SafeAreaView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import Constants from "expo-constants";
 import MapView, { Marker } from "react-native-maps";
@@ -15,7 +16,19 @@ import { Accuracy } from "expo-location";
 import { useState, useEffect } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
 
-export default function MapScreen({route}) {
+import AmericanIcon from "../../assets/FoodIcons/American.png";
+import AsianIcon from "../../assets/FoodIcons/Asian.png";
+import FrenchIcon from "../../assets/FoodIcons/French.png";
+import ItalianIcon from "../../assets/FoodIcons/Italian.png";
+import MediterraneanIcon from "../../assets/FoodIcons/Mediterranean.png";
+import NordicIcon from "../../assets/FoodIcons/Nordic.png";
+import OtherIcon from "../../assets/FoodIcons/Other.png";
+import Person1 from "../../assets/People/Person1.png";
+import Person2 from "../../assets/People/Person2.png";
+import Person3 from "../../assets/People/Person3.png";
+import Person4 from "../../assets/People/Person4.png";
+
+export default function MapScreen({ route }) {
   const [hasLocationPermission, setlocationPermission] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [region, setRegion] = useState(null);
@@ -27,6 +40,27 @@ export default function MapScreen({route}) {
     await Location.requestForegroundPermissionsAsync().then((item) => {
       setlocationPermission(item.granted);
     });
+  };
+
+  const cuisineIcons = {
+    American: AmericanIcon,
+    Asian: AsianIcon,
+    French: FrenchIcon,
+    Italian: ItalianIcon,
+    Mediterranean: MediterraneanIcon,
+    Nordic: NordicIcon,
+    Other: OtherIcon,
+  };
+
+  const personIcons = [Person1, Person2, Person3, Person4];
+
+  const maybeGetPersonIcon = () => {
+    // Only return an icon with 50% chance
+    if (Math.random() < 0.5) {
+      return personIcons[Math.floor(Math.random() * personIcons.length)];
+    } else {
+      return null; // 50% chance to return no icon
+    }
   };
 
   // Fetch data from Firebase
@@ -74,6 +108,7 @@ export default function MapScreen({route}) {
       // TODO: Parse the directions and update the map markers or polylines
     }
   }, [route.params?.directions]);
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,24 +117,46 @@ export default function MapScreen({route}) {
       ) : (
         <MapView
           provider="google"
-          style={styles.map}
           showsUserLocation
           showsMyLocationButton
           region={region}
+          customMapStyleId={"61da53ab6ce3bdb8"} // Map Id from Google Maps Platform
+          style={styles.map}
         >
-          {restaurantData.map((item, index) => (
-            <Marker
-              key={index}
-              coordinate={{
-                latitude: item.address.lat,
-                longitude: item.address.lng,
-              }}
-              View
-              style={styles.marker}
-              title={item.name}
-              description={item.cuisine}
-            />
-          ))}
+          {restaurantData.map((item, index) => {
+            const personIcon = maybeGetPersonIcon(); // This may be null or an icon
+            return (
+              <Marker
+                key={index}
+                coordinate={{
+                  latitude: item.address.lat,
+                  longitude: item.address.lng,
+                }}
+                title={item.name}
+                description={item.cuisine}
+              >
+                {/* Random person icon, only shown 50% of the time */}
+                {personIcon && (
+                  <Image
+                    source={personIcon}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      position: "absolute",
+                      marginTop: 15,
+                    }} // Adjust size and position as needed
+                    resizeMode="contain"
+                  />
+                )}
+                {/* Cuisine icon */}
+                <Image
+                  source={cuisineIcons[item.cuisine] || OtherIcon}
+                  style={{ width: 30, height: 30 }} // Adjust the size as needed
+                  resizeMode="contain"
+                />
+              </Marker>
+            );
+          })}
         </MapView>
       )}
     </SafeAreaView>

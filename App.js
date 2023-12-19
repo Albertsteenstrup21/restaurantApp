@@ -13,7 +13,7 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import ExplorerScreen from "./components/home/ExplorerScreen";
-import MapScreen from "./components/home/mapsComponents/MapScreen";
+import MapScreen from "./components/home/MapScreen";
 import StackNavigator from "./components/StackNavigator";
 import SignUpForm from "./components/auth/SignUpForm";
 import LoginForm from "./components/auth/LoginForm";

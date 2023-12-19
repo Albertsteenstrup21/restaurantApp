@@ -23,8 +23,9 @@ import { getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { Rating } from 'react-native-ratings';
+import { Picker } from '@react-native-picker/picker'; // Ensure this is imported at the top of your file
 import YOUR_API_KEY from "../../../keys/keys";
-
 
 const RestaurantSignUpForm = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -32,7 +33,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
   const [cuisine, setCuisine] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [priceRange, setPriceRange] = useState("");
-  const [rating, setRating] = useState("");
+  const [expertRating, setExpertRating] = useState("");
+  const [userRating, setUserRating] = useState(""); 
   const [media, setMedia] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [mediaArr, setMediaArr] = useState([]);
@@ -48,7 +50,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId = "test1234";
+      userId = "test123456";
     }
     // Check if required fields are filled out
     if (
@@ -57,7 +59,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
       !cuisine ||
       !phoneNumber ||
       !priceRange ||
-      !rating
+      !expertRating ||
+      !userRating
     ) {
       setErrorMessage("Please fill out all required fields.");
       console.log("Please fill out all required fields.");
@@ -107,7 +110,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
             cuisine,
             phone_number: phoneNumber,
             price_range: priceRange,
-            rating,
+            expertRating,
+            userRating,
             media: mediaWithDownloadUrls,
           };
           console.log("newRestaurant: " + JSON.stringify(newRestaurant));
@@ -203,6 +207,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
     setIsPhotoMaximized(false);
   };
 
+  
+
   // in useEffect we check if the selectedMedia is true and if isVideoMaximized or isPhotoMaximized is true, then we set the headerShown to false, else we set it to true
   useEffect(() => {
     if (selectedMedia && (isVideoMaximized || isPhotoMaximized)) {
@@ -270,7 +276,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
   }
 
   return (
-    <ScrollView keyboardShouldPersistTaps='always'>
+    <ScrollView keyboardShouldPersistTaps="always">
       <View style={styles.container}>
         <View style={styles.uploadContainer}>
           <Button
@@ -336,7 +342,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
           style={[styles.inputField, !name && styles.requiredInput]}
           required
         />
- 
+
         <GooglePlacesAutocomplete
           placeholder="Enter Location"
           minLength={2}
@@ -378,14 +384,20 @@ const RestaurantSignUpForm = ({ navigation }) => {
           onFail={(error) => console.log(error)}
           onNotFound={() => console.log("no results")}
         />
-  
-        <TextInput
-          placeholder="Cuisine"
-          value={cuisine}
-          onChangeText={(cuisine) => setCuisine(cuisine)}
+
+        <Picker
+          selectedValue={cuisine}
+          onValueChange={(itemValue) => setCuisine(itemValue)}
           style={[styles.inputField, !cuisine && styles.requiredInput]}
-          required
-        />
+        >
+          <Picker.Item label="Nordic" value="Nordic" />
+          <Picker.Item label="French" value="French" />
+          <Picker.Item label="Italian" value="Italian" />
+          <Picker.Item label="Mediterranean" value="Mediterranean" />
+          <Picker.Item label="Asian" value="Asian" />
+          <Picker.Item label="American" value="American" />
+          <Picker.Item label="Other" value="Other" />
+        </Picker>
         <TextInput
           placeholder="Phone Number"
           value={phoneNumber}
@@ -401,12 +413,21 @@ const RestaurantSignUpForm = ({ navigation }) => {
           required
         />
         <TextInput
-          placeholder="Rating"
-          value={rating}
-          onChangeText={(rating) => setRating(rating)}
-          style={[styles.inputField, !rating && styles.requiredInput]}
+          placeholder="Expert Rating"
+          value={expertRating}
+          onChangeText={(rating) => setExpertRating(rating)}
+          style={[styles.inputField, !expertRating && styles.requiredInput]}
           required
         />
+
+        <TextInput
+          placeholder="User Rating"
+          value={userRating}
+          onChangeText={(rating) => setUserRating(rating)}
+          style={[styles.inputField, !userRating && styles.requiredInput]}
+          required
+        />
+        
         <Button title="Next" onPress={handleSignUp} />
       </View>
     </ScrollView>

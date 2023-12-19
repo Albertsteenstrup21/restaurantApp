@@ -9,7 +9,7 @@ import ProfileScreen from "./home/ProfileScreen";
 import RestaurantSignUpForm from "./home/stackComponents/RestaurantSignUpForm";
 import SignUpForm from "./auth/SignUpForm";
 import LoginForm from "./auth/LoginForm";
-import MapScreen from "./home/mapsComponents/MapScreen";
+import MapScreen from "./home/MapScreen";
 import IndexScreen from "./home/ExplorerScreen";
 import HomeScreen from "./home/HomeScreen";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -30,7 +30,10 @@ export default function StackNavigator() {
 
       <Stack.Screen name="ResetPassword" component={ResetPassword} />
       <Stack.Screen name="Membership" component={Membership} />
-      <Stack.Screen name="RestaurantSignUpForm" component={RestaurantSignUpForm}/>
+      <Stack.Screen
+        name="RestaurantSignUpForm"
+        component={RestaurantSignUpForm}
+      />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="SignUpForm" component={SignUpForm} />
       <Stack.Screen name="LoginForm" component={LoginForm} />
