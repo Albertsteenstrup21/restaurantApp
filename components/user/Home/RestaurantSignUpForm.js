@@ -48,8 +48,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     const auth = getAuth();
     let userId = "";
     if (auth.currentUser) {
-      // userId = auth.currentUser.uid;
-      userId = "test5";
+      userId = auth.currentUser.uid;
     }
     // Check if required fields are filled out
     if (!name || !address || !cuisine || !website || !priceRange) {
