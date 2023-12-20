@@ -12,9 +12,10 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-import ExplorerScreen from "./components/home/ExplorerScreen";
-import MapScreen from "./components/home/MapScreen";
-import StackNavigator from "./components/StackNavigator";
+import ExplorerScreen from "./components/user/Explorer/ExplorerScreen";
+import MapScreen from "./components/user/Map/MapScreen";
+import StackNavigatorHome from "./components/user/Home/StackNavigator";
+import StackNavigatorExplorer from "./components/user/Explorer/StackNavigator";
 import SignUpForm from "./components/auth/SignUpForm";
 import LoginForm from "./components/auth/LoginForm";
 
@@ -27,9 +28,9 @@ const Tab = createBottomTabNavigator(); // Main app navigation
 
 export default function App() {
   const [user, setUser] = useState({ loggedIn: false });
-
   const auth = getAuth();
 
+  // Function to check if user is logged in
   function onAuthStateChange(callback) {
     return onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -48,6 +49,7 @@ export default function App() {
     });
   }
 
+  // Check if user is logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChange(setUser);
     return () => {
@@ -81,8 +83,8 @@ export default function App() {
             tabBarInactiveTintColor: "gray",
           })}
         >
-          <Tab.Screen name="Home" component={StackNavigator} />
-          <Tab.Screen name="Explorer" component={ExplorerScreen} />
+          <Tab.Screen name="Home" component={StackNavigatorHome} />
+          <Tab.Screen name="Explorer" component={StackNavigatorExplorer} />
           <Tab.Screen name="Map" component={MapScreen} />
         </Tab.Navigator>
       ) : (

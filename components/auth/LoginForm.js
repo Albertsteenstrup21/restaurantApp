@@ -14,6 +14,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 // Import image asset
 import tasteShareIcon from "../../assets/tasteShareIcon.png";
+import FacebookLoginImage from "../../assets/FacebookLogin.png"; // Update the path as necessary
 
 // Define LoginForm component
 function LoginForm({ navigation }) {
@@ -77,6 +78,11 @@ function LoginForm({ navigation }) {
     );
   };
 
+  const handleFacebookLogin = () => {
+    // Implement Facebook login logic here
+    console.log("Facebook login pressed");
+  };
+
   // Render LoginForm component
   return (
     <View style={styles.container}>
@@ -102,6 +108,9 @@ function LoginForm({ navigation }) {
       />
       {errorMessage && <Text style={styles.error}>Error: {errorMessage}</Text>}
       {renderButton()}
+      <TouchableOpacity onPress={handleFacebookLogin}>
+        <Image source={FacebookLoginImage} style={styles.facebookLoginButton} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate("SignUpForm")}>
         <Text style={styles.loginText}>
           Don't have an account? Create one here
@@ -136,6 +145,12 @@ const styles = StyleSheet.create({
     height: 100,
     marginBottom: 20,
   },
+  facebookLoginButton: {
+    width: 200, // Adjust the width as needed
+    height: 40, // Adjust the height as needed
+    marginTop: 5, // Spacing from the previous element
+    marginBottom: 10, // Spacing from the next element
+  },  
 });
 
 // Export LoginForm component for use in other components

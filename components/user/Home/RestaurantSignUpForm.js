@@ -23,18 +23,17 @@ import { getAuth } from "firebase/auth";
 //Importerer Ionicons til tab navigation
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { Rating } from 'react-native-ratings';
-import { Picker } from '@react-native-picker/picker'; // Ensure this is imported at the top of your file
+import { Picker } from "@react-native-picker/picker"; // Ensure this is imported at the top of your file
 import YOUR_API_KEY from "../../../keys/keys";
 
 const RestaurantSignUpForm = ({ navigation }) => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [cuisine, setCuisine] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [website, setWebsite] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [expertRating, setExpertRating] = useState("");
-  const [userRating, setUserRating] = useState(""); 
+  const [userRating, setUserRating] = useState("");
   const [media, setMedia] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [mediaArr, setMediaArr] = useState([]);
@@ -50,18 +49,10 @@ const RestaurantSignUpForm = ({ navigation }) => {
     let userId = "";
     if (auth.currentUser) {
       // userId = auth.currentUser.uid;
-      userId = "test123456";
+      userId = "test5";
     }
     // Check if required fields are filled out
-    if (
-      !name ||
-      !address ||
-      !cuisine ||
-      !phoneNumber ||
-      !priceRange ||
-      !expertRating ||
-      !userRating
-    ) {
+    if (!name || !address || !cuisine || !website || !priceRange) {
       setErrorMessage("Please fill out all required fields.");
       console.log("Please fill out all required fields.");
       return;
@@ -70,6 +61,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     try {
       const db = getDatabase();
       const restaurantRef = ref(db, "restaurants/" + userId);
+
       // Check if the user ID already exists in the database, if it does, set the error message state
       const snapshot = await get(restaurantRef);
       if (snapshot.exists()) {
@@ -93,10 +85,12 @@ const RestaurantSignUpForm = ({ navigation }) => {
               ? { contentType: "video/mp4" }
               : { contentType: "image/jpeg" };
 
+          // Upload the file and metadata 
           await uploadBytesResumable(mediaRef, blob, metadata);
           return getDownloadURL(mediaRef);
         });
 
+        // Wait for all download URLs to be returned from Firebase Storage
         try {
           const downloadUrls = await Promise.all(downloadUrlPromises);
           const mediaWithDownloadUrls = downloadUrls.map((downloadUrl) => ({
@@ -108,10 +102,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
             name,
             address,
             cuisine,
-            phone_number: phoneNumber,
             price_range: priceRange,
-            expertRating,
-            userRating,
+            website,
             media: mediaWithDownloadUrls,
           };
           console.log("newRestaurant: " + JSON.stringify(newRestaurant));
@@ -129,6 +121,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   };
 
+  // Access the device image library and retrieve a video
   const handleVideoUpload = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -152,6 +145,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   };
 
+  // Access the device image library and retrieve a photo
   const handlePhotoUpload = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -174,6 +168,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   };
 
+  // Format the duration of the video
   const formatDuration = (duration) => {
     const totalSeconds = Math.ceil(duration / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -181,6 +176,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // Remove media from the mediaArr
   const handleRemoveMedia = (index) => {
     const newMediaArr = [...mediaArr];
     const removedMedia = newMediaArr.splice(index, 1)[0];
@@ -190,6 +186,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   };
 
+  // When a media item is pressed, set the selectedMedia state to the media item and set the isVideoMaximized or isPhotoMaximized state to true
   const handleMediaPress = (media) => {
     setSelectedMedia(media);
     if (media.type === "video") {
@@ -201,13 +198,12 @@ const RestaurantSignUpForm = ({ navigation }) => {
     }
   };
 
+  // When the minimize button is pressed, set the selectedMedia state to null and set the isVideoMaximized or isPhotoMaximized state to false
   const handleMinimize = () => {
     setSelectedMedia(null);
     setIsVideoMaximized(false);
     setIsPhotoMaximized(false);
   };
-
-  
 
   // in useEffect we check if the selectedMedia is true and if isVideoMaximized or isPhotoMaximized is true, then we set the headerShown to false, else we set it to true
   useEffect(() => {
@@ -379,7 +375,8 @@ const RestaurantSignUpForm = ({ navigation }) => {
           onPress={(data, details = null) => {
             const lat = details.geometry.location.lat;
             const lng = details.geometry.location.lng;
-            setAddress({ lat, lng });
+            const address = details.formatted_address;
+            setAddress({ lat, lng, address });
           }}
           onFail={(error) => console.log(error)}
           onNotFound={() => console.log("no results")}
@@ -399,10 +396,10 @@ const RestaurantSignUpForm = ({ navigation }) => {
           <Picker.Item label="Other" value="Other" />
         </Picker>
         <TextInput
-          placeholder="Phone Number"
-          value={phoneNumber}
-          onChangeText={(phoneNumber) => setPhoneNumber(phoneNumber)}
-          style={[styles.inputField, !phoneNumber && styles.requiredInput]}
+          placeholder="Website"
+          value={website}
+          onChangeText={(website) => setWebsite(website)}
+          style={[styles.inputField, !website && styles.requiredInput]}
           required
         />
         <TextInput
@@ -412,22 +409,7 @@ const RestaurantSignUpForm = ({ navigation }) => {
           style={[styles.inputField, !priceRange && styles.requiredInput]}
           required
         />
-        <TextInput
-          placeholder="Expert Rating"
-          value={expertRating}
-          onChangeText={(rating) => setExpertRating(rating)}
-          style={[styles.inputField, !expertRating && styles.requiredInput]}
-          required
-        />
 
-        <TextInput
-          placeholder="User Rating"
-          value={userRating}
-          onChangeText={(rating) => setUserRating(rating)}
-          style={[styles.inputField, !userRating && styles.requiredInput]}
-          required
-        />
-        
         <Button title="Next" onPress={handleSignUp} />
       </View>
     </ScrollView>

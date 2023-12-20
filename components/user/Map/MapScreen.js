@@ -16,17 +16,17 @@ import { Accuracy } from "expo-location";
 import { useState, useEffect } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
 
-import AmericanIcon from "../../assets/FoodIcons/American.png";
-import AsianIcon from "../../assets/FoodIcons/Asian.png";
-import FrenchIcon from "../../assets/FoodIcons/French.png";
-import ItalianIcon from "../../assets/FoodIcons/Italian.png";
-import MediterraneanIcon from "../../assets/FoodIcons/Mediterranean.png";
-import NordicIcon from "../../assets/FoodIcons/Nordic.png";
-import OtherIcon from "../../assets/FoodIcons/Other.png";
-import Person1 from "../../assets/People/Person1.png";
-import Person2 from "../../assets/People/Person2.png";
-import Person3 from "../../assets/People/Person3.png";
-import Person4 from "../../assets/People/Person4.png";
+import AmericanIcon from "../../../assets/FoodIcons/American.png";
+import AsianIcon from "../../../assets/FoodIcons/Asian.png";
+import FrenchIcon from "../../../assets/FoodIcons/French.png";
+import ItalianIcon from "../../../assets/FoodIcons/Italian.png";
+import MediterraneanIcon from "../../../assets/FoodIcons/Mediterranean.png";
+import NordicIcon from "../../../assets/FoodIcons/Nordic.png";
+import OtherIcon from "../../../assets/FoodIcons/Other.png";
+import Person1 from "../../../assets/People/Person1.png";
+import Person2 from "../../../assets/People/Person2.png";
+import Person3 from "../../../assets/People/Person3.png";
+import Person4 from "../../../assets/People/Person4.png";
 
 export default function MapScreen({ route }) {
   const [hasLocationPermission, setlocationPermission] = useState(false);
@@ -34,7 +34,6 @@ export default function MapScreen({ route }) {
   const [region, setRegion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [restaurantData, setRestaurantData] = useState([]);
-  const [directions, setDirections] = useState(null);
 
   const getLocationPermission = async () => {
     await Location.requestForegroundPermissionsAsync().then((item) => {
@@ -83,6 +82,7 @@ export default function MapScreen({ route }) {
     updateLocation();
   }, []);
 
+  // Update location
   const updateLocation = async () => {
     setLoading(true);
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -102,14 +102,6 @@ export default function MapScreen({ route }) {
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (route.params?.directions) {
-      setDirections(route.params.directions);
-      // TODO: Parse the directions and update the map markers or polylines
-    }
-  }, [route.params?.directions]);
-  
-
   return (
     <SafeAreaView style={styles.container}>
       {loading ? (
@@ -120,7 +112,7 @@ export default function MapScreen({ route }) {
           showsUserLocation
           showsMyLocationButton
           region={region}
-          customMapStyleId={"61da53ab6ce3bdb8"} // Map Id from Google Maps Platform
+          customMapStyle={mapStyle}
           style={styles.map}
         >
           {restaurantData.map((item, index) => {
@@ -151,7 +143,7 @@ export default function MapScreen({ route }) {
                 {/* Cuisine icon */}
                 <Image
                   source={cuisineIcons[item.cuisine] || OtherIcon}
-                  style={{ width: 30, height: 30 }} // Adjust the size as needed
+                  style={{ width: 30, height: 30 }}
                   resizeMode="contain"
                 />
               </Marker>
@@ -181,3 +173,82 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
 });
+
+const mapStyle = [
+  {
+    "featureType": "administrative.land_parcel",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.neighborhood",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  }
+]

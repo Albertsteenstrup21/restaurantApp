@@ -14,6 +14,7 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 // Import image asset
 import tasteShareIcon from "../../assets/tasteShareIcon.png";
+import FacebookLoginImage from "../../assets/FacebookLogin.png"; // Update the path as necessary
 
 // Define SignUpForm component
 function SignUpForm({ navigation }) {
@@ -66,7 +67,20 @@ function SignUpForm({ navigation }) {
 
   // Render create user button
   const renderButton = () => {
-    return <Button onPress={() => handleSubmit()} title="Create user" />;
+    return (
+      <Button
+        onPress={() => {
+          handleSubmit();
+          startAnimation(); // Call startAnimation when the button is pressed
+        }}
+        title="Create user"
+      />
+    );
+  };
+
+  const handleFacebookLogin = () => {
+    // Implement Facebook login logic here
+    console.log("Facebook login pressed");
   };
 
   // Render SignUpForm component
@@ -94,7 +108,9 @@ function SignUpForm({ navigation }) {
       />
       {errorMessage && <Text style={styles.error}>Error: {errorMessage}</Text>}
       {renderButton()}
-
+      <TouchableOpacity onPress={handleFacebookLogin}>
+        <Image source={FacebookLoginImage} style={styles.facebookLoginButton} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>
         <Text style={styles.loginText}>
           If you already have an account, login here
@@ -129,6 +145,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginBottom: 20,
+  },
+  facebookLoginButton: {
+    width: 200, // Adjust the width as needed
+    height: 40, // Adjust the height as needed
+    marginTop: 5, // Spacing from the previous element
+    marginBottom: 10, // Spacing from the next element
   },
 });
 
